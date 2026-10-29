@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Система продаж для НАСТРОЙКИ</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap">
+<style>
+/* Кино-колода в стиле ролика: сцена 1280x720 на тёмном «ночном» фоне с плавающим светом.
+   Одна осознанная тёмная тема. Сетка: поля 76px, колонки на gap 20px, все карточки одной высоты в ряду. */
+:root{
+  --bg:#080B11; --panel:#111722; --panel-2:#161E2C; --line:#232D3D;
+  --ink:#F3F6F9; --muted:#97A6B6; --dim:#5F6E7E;
+  --gold:#FFC24A; --gold-2:#FF9F45; --blue:#3AA0FF; --green:#2EE59D; --coral:#FF7A5C; --violet:#9B7BFF;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Golos Text",-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%; margin:0}
+body{background:var(--bg); color:var(--ink); overflow:hidden; font-family:var(--body); font-size:21px; line-height:1.45; -webkit-tap-highlight-color:transparent}
+
+/* фон: свет и сетка */
+.sky{position:fixed; inset:0; overflow:hidden; pointer-events:none}
+.sky i{position:absolute; border-radius:50%; filter:blur(120px); opacity:.42}
+.sky .a{width:60vw; height:60vw; left:-18vw; top:-30vw; background:var(--blue); animation:drift1 22s ease-in-out infinite alternate}
+.sky .b{width:50vw; height:50vw; right:-16vw; bottom:-26vw; background:var(--violet); animation:drift2 26s ease-in-out infinite alternate}
+.sky .c{width:34vw; height:34vw; right:18vw; top:-20vw; background:var(--gold-2); opacity:.16; animation:drift1 30s ease-in-out infinite alternate-reverse}
+.sky::after{content:""; position:absolute; inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
+  background-size:64px 64px; mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%)}
+@keyframes drift1{to{transform:translate(8vw,6vw)}}
+@keyframes drift2{to{transform:translate(-8vw,-5vw)}}
+
+#viewport{position:fixed; inset:4px 0 68px 0; display:grid; place-items:center}
+#stage{position:relative; width:1280px; height:720px; flex:none; transform-origin:center center}
+.slide{position:absolute; inset:0; padding:64px 76px; display:flex; flex-direction:column; opacity:0; visibility:hidden;
+  transform:translateY(18px) scale(.985); transition:opacity .5s ease, transform .6s cubic-bezier(.16,1,.3,1), visibility 0s linear .5s}
+.slide.on{opacity:1; visibility:visible; transform:none; transition:opacity .5s ease, transform .6s cubic-bezier(.16,1,.3,1)}
+.slide.past{transform:translateY(-18px) scale(.985)}
+.slide.on .in{animation:rise .7s cubic-bezier(.16,1,.3,1) both}
+.slide.on .in:nth-child(2){animation-delay:.07s}.slide.on .in:nth-child(3){animation-delay:.14s}
+.slide.on .in:nth-child(4){animation-delay:.21s}.slide.on .in:nth-child(5){animation-delay:.28s}
+@keyframes rise{from{opacity:0; transform:translateY(22px)}to{opacity:1; transform:none}}
+
+/* типографика */
+.eyebrow{display:flex; align-items:center; gap:12px; font-size:15px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin:0 0 20px}
+.eyebrow::before{content:""; width:34px; height:2px; background:linear-gradient(90deg,var(--gold),transparent)}
+h1,h2,h3{font-family:var(--display); margin:0; text-wrap:balance; letter-spacing:-.02em}
+h1{font-size:58px; line-height:1.08; font-weight:800}
+h2{font-size:44px; line-height:1.12; font-weight:800}
+h3{font-size:22px; line-height:1.25; font-weight:700; letter-spacing:-.01em}
+.hl{background:linear-gradient(100deg,var(--gold),var(--gold-2)); -webkit-background-clip:text; background-clip:text; color:transparent}
+.lead{color:var(--muted); font-size:22px; line-height:1.5; margin:22px 0 0; max-width:900px}
+.foot{margin-top:auto; color:var(--dim); font-size:14px}
+
+/* поверхности */
+.glass{background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.09);
+  border-radius:22px; padding:26px 28px; backdrop-filter:blur(8px)}
+.glass p{margin:8px 0 0; color:var(--muted); font-size:17.5px; line-height:1.5}
+.tag{font-size:12.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--blue); margin-bottom:12px; display:block}
+.ico{width:46px; height:46px; border-radius:14px; display:grid; place-items:center; margin-bottom:16px; background:rgba(58,160,255,.14); color:var(--blue)}
+.ico svg{width:24px; height:24px}
+.tight .glass{padding:20px 24px; display:grid; grid-template-columns:46px 1fr; column-gap:18px; align-items:start}
+.tight .glass .ico{grid-row:span 2; margin:0}
+.tight .glass p{font-size:16.5px; margin-top:6px}
+.g-gold{background:linear-gradient(160deg,rgba(255,194,74,.18),rgba(255,159,69,.05)); border-color:rgba(255,194,74,.35)}
+.g-gold .tag,.g-gold .ico{color:var(--gold)} .g-gold .ico{background:rgba(255,194,74,.16)}
+.g-coral{background:linear-gradient(160deg,rgba(255,122,92,.16),rgba(255,122,92,.04)); border-color:rgba(255,122,92,.32)}
+.grid{display:grid; gap:20px; align-items:stretch}
+.c2{grid-template-columns:repeat(2,1fr)} .c3{grid-template-columns:repeat(3,1fr)} .c4{grid-template-columns:repeat(4,1fr)}
+
+.pill{display:inline-flex; align-items:center; gap:10px; padding:11px 20px; border-radius:99px; font-weight:600; font-size:18px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12)}
+.pill i{width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green)}
+
+/* слайд 1: телефон */
+.hero{display:grid; grid-template-columns:1fr 360px; gap:56px; align-items:center; height:100%}
+.big85{font-family:var(--display); font-weight:800; font-size:128px; line-height:.9; letter-spacing:-.05em; display:block; margin-bottom:8px}
+.hero h1{font-size:46px; line-height:1.1}
+.phone{position:relative; width:276px; height:556px; justify-self:center; border-radius:46px; padding:12px; background:linear-gradient(150deg,#2A313B,#0C0F14);
+  box-shadow:0 40px 90px rgba(0,0,0,.6), inset 0 0 0 1.5px rgba(255,255,255,.08); transform:rotate(4deg)}
+.screen{width:100%; height:100%; border-radius:36px; overflow:hidden; background:linear-gradient(165deg,#CFE3D3,#B9D6CB 45%,#C7DCE8); display:flex; flex-direction:column}
+.p-top{background:#fff; padding:34px 16px 12px; display:flex; gap:10px; align-items:center; color:#111}
+.p-ava{width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--coral)); display:grid; place-items:center; font-size:16px}
+.p-top b{font-size:15px; display:block} .p-top span{font-size:12px; color:#6B7A86}
+.p-msgs{flex:1; display:flex; flex-direction:column; justify-content:flex-end; gap:8px; padding:12px; color:#111; font-size:13.5px; line-height:1.38}
+.bub{background:#fff; border-radius:16px 16px 16px 5px; padding:9px 12px; max-width:88%}
+.bub.me{align-self:flex-end; background:#EFFDDE; border-radius:16px 16px 5px 16px}
+.key{background:#2AABEE; color:#fff; border-radius:12px; text-align:center; padding:9px; font-weight:600; font-size:13.5px}
+.float{position:absolute; display:flex; gap:10px; align-items:center; padding:10px 14px; border-radius:16px; background:rgba(17,23,34,.92); border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 18px 40px rgba(0,0,0,.45); font-size:14px; white-space:nowrap; animation:bob 5s ease-in-out infinite}
+.float b{display:block; font-size:12px; letter-spacing:.08em; text-transform:uppercase}
+.float .dot{width:30px; height:30px; border-radius:9px; background:#2AABEE; display:grid; place-items:center; font-size:14px; flex:none}
+.f1{left:-150px; top:96px} .f1 b{color:var(--green)}
+.f2{right:-118px; top:196px; animation-delay:-2.5s} .f2 b{color:var(--gold)}
+@keyframes bob{50%{transform:translateY(-10px)}}
+
+/* слайд 2 */
+.split{display:grid; grid-template-columns:1.15fr .85fr; gap:56px; align-items:center; height:100%}
+.ring{position:relative; width:360px; height:360px; justify-self:center; display:grid; place-items:center}
+.ring::before{content:""; position:absolute; inset:0; border-radius:50%; background:conic-gradient(from 0deg,var(--gold),var(--coral),var(--violet),var(--blue),var(--gold));
+  mask:radial-gradient(circle,transparent 62%,#000 63%); animation:spin 14s linear infinite}
+.ring::after{content:""; position:absolute; inset:34px; border-radius:50%; border:1px dashed rgba(255,255,255,.16)}
+.ring strong{font-family:var(--display); font-size:96px; font-weight:800; letter-spacing:-.04em}
+.ring small{position:absolute; bottom:96px; color:var(--muted); font-size:16px; letter-spacing:.12em; text-transform:uppercase}
+@keyframes spin{to{transform:rotate(360deg)}}
+.callout{margin-top:30px; padding:22px 26px; border-radius:20px; font-size:24px; font-weight:600; line-height:1.35;
+  background:linear-gradient(100deg,rgba(255,194,74,.18),rgba(255,194,74,.04)); border:1px solid rgba(255,194,74,.35)}
+
+/* слайд 3: схема */
+.flow{position:relative; margin-top:26px; flex:1; display:grid; grid-template-columns:330px 1fr 370px; align-items:center; gap:0}
+.src{display:flex; flex-direction:column; gap:12px; position:relative; z-index:2}
+.src .glass{padding:13px 18px; border-radius:16px}
+.src b{font-size:17.5px; display:block}
+.src span{color:var(--muted); font-size:14.5px; line-height:1.35; display:block; margin-top:2px}
+.src .opt{color:var(--gold); font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-left:6px}
+.wires{position:absolute; inset:0; z-index:1; pointer-events:none}
+.wires path{fill:none; stroke:url(#wg); stroke-width:2; stroke-dasharray:6 8; animation:dash 1.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-28}}
+.core{justify-self:center; z-index:2; width:150px; height:150px; border-radius:50%; display:grid; place-items:center; text-align:center;
+  background:radial-gradient(circle at 35% 30%,#4FB7FF,#1C5FD0 70%); box-shadow:0 0 0 12px rgba(58,160,255,.12),0 0 80px rgba(58,160,255,.55);
+  font-family:var(--display); font-weight:800; font-size:26px}
+.core small{display:block; font-family:var(--body); font-weight:600; font-size:13px; opacity:.85; letter-spacing:.08em}
+.chain{display:flex; flex-direction:column; gap:10px; z-index:2}
+.step{display:flex; align-items:center; gap:14px; padding:13px 18px; border-radius:16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); font-weight:600; font-size:19px}
+.step em{font-style:normal; font-family:var(--display); font-size:13px; color:var(--dim); width:22px}
+.step.money{background:linear-gradient(100deg,rgba(46,229,157,.18),rgba(46,229,157,.04)); border-color:rgba(46,229,157,.35)}
+.step.money em{color:var(--green)}
+.chain p{margin:6px 0 0; color:var(--muted); font-size:15.5px; line-height:1.45}
+
+/* слайд 4: видео */
+.vwrap{position:relative; margin:22px auto 0; width:928px; height:522px; border-radius:24px; overflow:hidden; background:#000;
+  box-shadow:0 40px 90px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08)}
+.vwrap video{width:100%; height:100%; display:block; object-fit:cover}
+.vplay{position:absolute; inset:0; display:grid; place-items:center; background:radial-gradient(circle,rgba(0,0,0,.15),rgba(0,0,0,.55)); border:0; cursor:pointer; color:#fff; font:600 19px var(--body)}
+.vplay span{display:flex; align-items:center; gap:14px; padding:16px 30px; border-radius:99px; background:linear-gradient(100deg,var(--gold),var(--gold-2)); color:#1A1206; box-shadow:0 14px 40px rgba(255,159,69,.45)}
+.vplay:focus-visible span{outline:3px solid #fff; outline-offset:3px}
+.vplay[hidden]{display:none}
+
+/* слайд 5: цифры */
+.stat{text-align:left; display:flex; flex-direction:column; justify-content:space-between; min-height:210px}
+.stat strong{font-family:var(--display); font-weight:800; font-size:76px; line-height:1; letter-spacing:-.04em}
+.stat strong small{font-size:32px; letter-spacing:-.02em}
+.stat span{color:var(--muted); font-size:17px; line-height:1.4}
+.meter{height:8px; border-radius:4px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:16px}
+.meter i{display:block; height:100%; border-radius:4px; background:linear-gradient(90deg,var(--gold),var(--gold-2))}
+
+/* слайд 9: сравнение */
+.bars{margin-top:34px; display:flex; flex-direction:column; gap:18px}
+.bar{display:grid; grid-template-columns:150px 1fr 110px; align-items:center; gap:20px}
+.bar .who{font-weight:600; font-size:18px}
+.bar .who small{display:block; color:var(--dim); font-size:13.5px; font-weight:500}
+.track{height:34px; border-radius:10px; background:rgba(255,255,255,.04); position:relative; overflow:hidden}
+.track i{position:absolute; inset:0 auto 0 0; border-radius:10px; background:linear-gradient(90deg,rgba(255,122,92,.55),var(--coral))}
+.bar.us .track i{background:linear-gradient(90deg,rgba(46,229,157,.6),var(--green))}
+.bar .sum{font-family:var(--display); font-weight:700; font-size:22px; text-align:right; font-variant-numeric:tabular-nums}
+.bar.us .sum{color:var(--green)}
+.slide.on .track i{animation:grow 1.1s cubic-bezier(.16,1,.3,1) both .2s}
+@keyframes grow{from{transform:scaleX(0); transform-origin:left}to{transform:scaleX(1); transform-origin:left}}
+
+/* слайд 10 */
+.list{margin:30px 0 0; padding:0; list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:14px 20px}
+.list li{display:flex; gap:16px; align-items:center; padding:18px 22px; border-radius:18px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09); font-size:19px; font-weight:500}
+.list li b{flex:none; width:34px; height:34px; border-radius:50%; display:grid; place-items:center; background:rgba(46,229,157,.15); color:var(--green); font-size:16px}
+
+/* слайд 11 */
+.guar{display:flex; gap:24px; align-items:center; margin-top:20px; padding:24px 30px; border-radius:22px;
+  background:linear-gradient(100deg,rgba(46,229,157,.2),rgba(46,229,157,.05)); border:1px solid rgba(46,229,157,.4)}
+.guar b{font-family:var(--display); font-size:22px; display:block; margin-bottom:4px}
+.guar span{color:var(--muted)}
+
+/* слайд 12 */
+.road{position:relative; margin-top:40px}
+.road::before{content:""; position:absolute; left:40px; right:40px; top:23px; height:2px; background:linear-gradient(90deg,var(--gold),var(--blue),var(--green))}
+.road .grid{position:relative}
+.node{width:48px; height:48px; border-radius:50%; display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:18px; color:#1A1206; margin-bottom:18px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-2)); box-shadow:0 0 0 8px var(--bg)}
+.road .glass:nth-child(2) .node{background:linear-gradient(135deg,#7CC8FF,var(--blue))}
+.road .glass:nth-child(3) .node{background:linear-gradient(135deg,#7DF2C4,var(--green))}
+.road .glass{background:none; border:0; padding:0 8px 0 0; backdrop-filter:none}
+.finale{margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:24px; padding:24px 30px; border-radius:22px;
+  background:linear-gradient(100deg,rgba(255,194,74,.2),rgba(255,159,69,.06)); border:1px solid rgba(255,194,74,.38)}
+.finale strong{font-family:var(--display); font-size:28px; font-weight:800; letter-spacing:-.02em}
+.finale > span{color:var(--muted); font-size:17px; white-space:nowrap}
+.slide.mid{justify-content:center}
+
+/* управление */
+.zone{position:fixed; top:0; bottom:68px; width:15%; z-index:3; cursor:pointer; display:flex; align-items:center}
+.zone.l{left:0; padding-left:max(18px,env(safe-area-inset-left,0px))}
+.zone.r{right:0; justify-content:flex-end; padding-right:max(18px,env(safe-area-inset-right,0px))}
+.zone button{width:56px; height:56px; border-radius:50%; border:1px solid rgba(255,255,255,.14); background:rgba(17,23,34,.85); color:var(--ink); font-size:26px; line-height:1;
+  cursor:pointer; opacity:0; transition:opacity .2s, transform .2s}
+.zone:hover button{opacity:1} .zone button:hover{transform:scale(1.06)}
+.zone.off{pointer-events:none} .zone.off button{opacity:0!important}
+body.vid-on .zone{bottom:150px; top:150px}
+#bar{position:fixed; left:0; right:0; bottom:0; height:68px; display:flex; align-items:center; gap:14px; z-index:4;
+  padding:0 max(18px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(18px,env(safe-area-inset-left,0px));
+  background:rgba(8,11,17,.82); border-top:1px solid var(--line); backdrop-filter:blur(10px)}
+#bar button{height:40px; padding:0 15px; border-radius:12px; border:1px solid var(--line); background:var(--panel); color:var(--ink); font:600 15px var(--body);
+  cursor:pointer; display:flex; align-items:center; gap:8px; flex:none}
+#bar button:hover:not(:disabled){border-color:var(--gold)}
+#bar button:focus-visible,.zone button:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+#bar button:disabled{opacity:.35; cursor:default}
+#next{background:linear-gradient(100deg,var(--gold),var(--gold-2))!important; color:#1A1206!important; border-color:transparent!important}
+#dots{display:flex; gap:6px; flex:1; justify-content:center; min-width:0; flex-wrap:wrap}
+#dots button{width:30px; height:30px; padding:0; justify-content:center; border-radius:50%; font-size:12.5px; color:var(--muted)}
+#dots button.on{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+#count{font-weight:600; min-width:58px; text-align:center; font-variant-numeric:tabular-nums; color:var(--muted)}
+#prog{position:fixed; left:0; top:0; height:3px; width:0; z-index:5; background:linear-gradient(90deg,var(--gold),var(--coral)); transition:width .5s cubic-bezier(.16,1,.3,1)}
+#hint{color:var(--dim); font-size:13.5px; white-space:nowrap}
+@media (max-width:820px){ #hint,#dots{display:none} #bar{justify-content:space-between} .zone button{opacity:.85; width:44px; height:44px; font-size:22px} }
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important; transition:none!important}}
+</style>
+
+<div class="sky" aria-hidden="true"><i class="a"></i><i class="b"></i><i class="c"></i></div>
+<div id="prog"></div>
+<div id="viewport"><div id="stage">
+
+  <!-- 1 -->
+  <section class="slide" data-title="Начало">
+    <div class="hero">
+      <div>
+        <p class="eyebrow in">Для НАСТРОЙКИ и ВБС · система продаж в Telegram</p>
+        <h1 class="in"><span class="big85 hl">93%</span>ваших подписчиков не&nbsp;видят ваших постов. Бот напишет каждой лично.</h1>
+        <p class="lead in" style="font-size:18.5px; max-width:640px; margin-top:18px">Бот-продавец для эксперта: сам ведёт подписчика от бесплатного лид-магнита до покупки, принимает оплату и выдаёт доступ. Без отдела заботы и без ежемесячной абонплаты.</p>
+        <div class="in" style="display:flex; gap:12px; margin-top:24px; flex-wrap:wrap">
+          <span class="pill"><i></i>Ваш бот работает через 3 недели</span>
+          <span class="pill"><i></i>Один платёж, без абонплаты</span>
+        </div>
+      </div>
+      <div class="phone in" aria-hidden="true">
+        <div class="screen">
+          <div class="p-top"><div class="p-ava">✨</div><div><b>Бот эксперта</b><span>бот</span></div></div>
+          <div class="p-msgs">
+            <div class="bub">Анна, привет 👋 Открою тебе вводный урок ВБС. Готова начать?</div>
+            <div class="bub me">Да, конечно ✨</div>
+            <div class="bub"><b>Вижу твою оплату ✨</b><br>Всё открыто, заходи в закрытый чат</div>
+            <div class="key">Войти в НАСТРОЙКУ</div>
+          </div>
+        </div>
+        <div class="float f1"><span class="dot">✈</span><span><b>Новая оплата</b>НАСТРОЙКА · $55</span></div>
+        <div class="float f2"><span class="dot">✈</span><span><b>Доступ выдан</b>за 10 секунд, без вас</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide" data-title="Что появится">
+    <div class="split">
+      <div>
+        <p class="eyebrow in">Что у вас появится</p>
+        <h2 class="in">Воронка, которая <span class="hl">приносит деньги сама</span></h2>
+        <p class="lead in">Каждый зритель и подписчик попадает в бота, прогревается и доходит до оплаты. Днём и ночью, в выходные, пока вы ведёте эфир или спите. База растёт каждый день, и каждое следующее предложение продаёт лучше предыдущего.</p>
+        <div class="callout in">Это не разовая настройка, а ваш актив, который постоянно приносит доход.</div>
+      </div>
+      <div class="ring in" aria-hidden="true"><strong>24/7</strong><small>без выходных</small></div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide" data-title="Как устроено">
+    <p class="eyebrow in">Как это устроено</p>
+    <h2 class="in">Люди приходят откуда угодно. <span class="hl">Дальше бот сам</span></h2>
+    <div class="flow in">
+      <svg class="wires" id="wires" aria-hidden="true">
+        <defs><linearGradient id="wg" x1="0" x2="1"><stop offset="0" stop-color="#FFC24A"/><stop offset="1" stop-color="#3AA0FF"/></linearGradient></defs>
+      </svg>
+      <div class="src">
+        <div class="glass"><b>Ваш YouTube</b><span>под видео ссылка: зритель приходит уже прогретый</span></div>
+        <div class="glass"><b>Ваш Telegram-канал</b><span>закреп и посты ведут подписчиков в бота</span></div>
+        <div class="glass"><b>Instagram, TikTok, Facebook <span class="opt">по желанию</span></b><span>подключаем те соцсети, которые ведёте вы</span></div>
+        <div class="glass"><b>Холодная база <span class="opt">по запросу</span></b><span>приглашение, прогрев в канале и в бота</span></div>
+      </div>
+      <div class="core">бот<small>24/7</small></div>
+      <div class="chain">
+        <div class="step"><em>01</em>Прогрев</div>
+        <div class="step"><em>02</em>Предложение</div>
+        <div class="step money"><em>03</em>Оплата</div>
+        <div class="step money"><em>04</em>Доступ</div>
+        <p>Без вашего участия, в любое время суток, даже когда вы спите.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide" data-title="Видео" id="s-video">
+    <p class="eyebrow in">Посмотрите глазами подписчика</p>
+    <h2 class="in" style="font-size:34px">Одна минута: весь путь от ролика до покупки</h2>
+    <div class="vwrap in">
+      <video id="vid" src="demo.mp4" poster="poster.jpg" preload="metadata" playsinline controls></video>
+      <button class="vplay" id="vplay" aria-label="Смотреть видео"><span><svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1 L15 9 L1 17 Z" fill="currentColor"/></svg>Смотреть</span></button>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide mid" data-title="Кейс">
+    <p class="eyebrow in">Живой проект · эксперт по практикам и медитациям</p>
+    <h2 class="in">Первый месяц работы <span class="hl">в цифрах</span></h2>
+    <div class="grid c4 in" style="margin-top:40px">
+      <div class="glass stat"><strong>277</strong><div><span>человек пришли в бота</span><div class="meter"><i style="width:100%"></i></div></div></div>
+      <div class="glass stat"><strong>9<small> из 10</small></strong><div><span>забирают бесплатный лид-магнит</span><div class="meter"><i style="width:90%"></i></div></div></div>
+      <div class="glass stat g-gold"><strong class="hl">12</strong><div><span>продаж, все приняты автоматически</span><div class="meter"><i style="width:100%"></i></div></div></div>
+      <div class="glass stat"><strong>8</strong><div><span>из них уже в первые две недели</span><div class="meter"><i style="width:67%"></i></div></div></div>
+    </div>
+    <p class="lead in" style="font-size:19px">Цифры не из рекламы: бот сам записывает каждый вход и каждую оплату. За два месяца работы: 441 человек и 21 продажа.</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide" data-title="Что изменится">
+    <p class="eyebrow in">Что изменится в ваших продажах</p>
+    <h2 class="in" style="font-size:32px">Вы не просто растёте как эксперт, а <span class="hl">начинаете зарабатывать больше</span></h2>
+    <div class="grid c2 in tight" style="margin-top:24px; gap:16px">
+      <div class="glass g-gold"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
+        <h3>Больше продаж с той же аудитории</h3><p>Ваш пост видят около 2 800 из 43 000 подписчиков, а бот ведёт к покупке каждую, кто в него зашёл. Тем, кто не купил в первый день, он сам напомнит и ответит на сомнения.</p></div>
+      <div class="glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h4"/></svg></div>
+        <h3>Ни одной оплаты и доступа руками</h3><p>Бот сам принимает оплату, сам выдаёт доступ и сам напоминает. Без отдела заботы и переписки в личке.</p></div>
+      <div class="glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></div>
+        <h3>Ваша мини-платформа</h3><p>Все, кто пришёл, остаются у вас. Следующий запуск делаете по своей базе, без новых денег на трафик.</p></div>
+      <div class="glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+        <h3>Все цифры перед глазами</h3><p>Отчёт каждый понедельник: сколько пришло, сколько купило и какой канал приносит деньги.</p></div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide mid" data-title="Кому подходит">
+    <p class="eyebrow in">Кому это подходит</p>
+    <h2 class="in">Экспертам, у которых есть <span class="hl">свой канал и свои продукты</span></h2>
+    <div class="grid in" style="grid-template-columns:1.35fr 1fr; margin-top:40px">
+      <div class="glass">
+        <span class="tag">Подходит</span>
+        <h3 style="font-size:26px">Психология, родительство, практики, обучение</h3>
+        <p>Есть Telegram-канал или YouTube, а в нём живые зрители. Есть что продавать: курсы, клуб по подписке, консультации.</p>
+        <p style="color:var(--ink); font-weight:600; margin-top:18px">Бот превращает подписчиков в покупателей.</p>
+      </div>
+      <div class="glass g-coral">
+        <span class="tag" style="color:var(--coral)">Честно скажу</span>
+        <h3 style="font-size:24px">Если потока подписчиков пока нет</h3>
+        <p>Начинать стоит не с автоматизации, а с запуска потока подписчиков. Как это сделать, расскажу в разговоре.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide mid" data-title="Под вас">
+    <p class="eyebrow in">Под вашу ситуацию</p>
+    <h2 class="in">Бот собирается под <span class="hl">ваш запрос и ваши продукты</span></h2>
+    <p class="lead in" style="font-size:19px; margin-top:14px">Состав работ и цена от формата не зависят. Например:</p>
+    <div class="grid c3 in" style="margin-top:26px">
+      <div class="glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M7 10.5V16c0 1.5 2.2 3 5 3s5-1.5 5-3v-5.5"/></svg></div>
+        <span class="tag">Готовите обучение</span><h3>Воронка под запуск</h3><p>Бесплатный урок как вход, прогрев, ранняя цена. После эфира запись и дедлайн тем, кто не купил.</p></div>
+      <div class="glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 19c0-3 2.7-5 6-5s6 2 6 5M15 14.5c2.8 0 5 1.6 5 4.5"/></svg></div>
+        <span class="tag">Продаёте клуб</span><h3>Клуб на автопилоте</h3><p>Оплата и продление подписки, напоминание до конца доступа, вход в чат и выход без ручной сверки.</p></div>
+      <div class="glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2 3.5 5 5 5 9a5 5 0 01-10 0c0-4 3-5.5 5-9z"/></svg></div>
+        <span class="tag">Продаёте практики</span><h3>Магазин практик</h3><p>Подбор практики за пару вопросов, оплата и доступ сразу, днём и ночью, потом следующий продукт.</p></div>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide" data-title="Подписка или своё">
+    <p class="eyebrow in">Свой бот или конструктор по подписке</p>
+    <h2 class="in" style="font-size:38px">Конструктор берёт плату за подписчиков <span class="hl">каждый месяц</span></h2>
+    <p class="lead in" style="font-size:18px; margin-top:12px">Сколько стоит конструктор за три года, в зависимости от числа людей в боте</p>
+    <div class="bars in">
+      <div class="bar"><span class="who">500 человек<small>$12 в месяц</small></span><span class="track"><i style="width:10%"></i></span><span class="sum">$432</span></div>
+      <div class="bar"><span class="who">10 000<small>$74 в месяц</small></span><span class="track"><i style="width:62.2%"></i></span><span class="sum">$2 664</span></div>
+      <div class="bar"><span class="who">20 000<small>$119 в месяц</small></span><span class="track"><i style="width:100%"></i></span><span class="sum">$4 284</span></div>
+      <div class="bar us"><span class="who">Свой бот<small>сервер ~$5 в месяц</small></span><span class="track"><i style="width:4.2%"></i></span><span class="sum">$180</span></div>
+    </div>
+    <div class="foot">Конструктор: SendPulse PRO для мессенджеров, помесячно, цены на 7 октября 2026. Свой бот: только сервер за 36 месяцев, плюс один платёж за создание. Бот и база ваши.</div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide mid" data-title="Что входит">
+    <p class="eyebrow in">Что входит в создание бота</p>
+    <h2 class="in">Работающий бот <span class="hl">за 3 недели</span></h2>
+    <ul class="list in">
+      <li><b>✓</b>Бот-воронка: от бесплатного лид-магнита до оплаты</li>
+      <li><b>✓</b>Лендинг и один понятный путь к оплате</li>
+      <li><b>✓</b>Все соцсети в одного бота, своя ссылка на каждую</li>
+      <li><b>✓</b>Админка в Telegram и отчёт по понедельникам</li>
+      <li><b>✓</b>Сервер, резервные копии и сигнал о сбое</li>
+      <li><b>✓</b>Сопровождение после запуска и две большие правки</li>
+    </ul>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide mid" data-title="Условия">
+    <p class="eyebrow in">Условия</p>
+    <h2 class="in" style="font-size:38px">Один платёж. <span class="hl">Без абонплаты и без процента с продаж</span></h2>
+    <div class="grid c3 in" style="margin-top:30px">
+      <div class="glass"><span class="tag">Без абонплаты</span><h3>Платите один раз</h3><p>Постоянный расход только сервер, около $5 в месяц.</p></div>
+      <div class="glass"><span class="tag">Сопровождение</span><h3>Две недели рядом</h3><p>После запуска слежу, что всё работает. Две большие правки включены.</p></div>
+      <div class="glass"><span class="tag">Без сюрпризов</span><h3>Без скрытых доплат</h3><p>Всё, что входит в работу, записано заранее.</p></div>
+    </div>
+    <div class="guar in">
+      <svg width="54" height="54" viewBox="0 0 46 46" aria-hidden="true"><path d="M23 3 L40 9 V22 C40 32 32.5 39.5 23 43 C13.5 39.5 6 32 6 22 V9 Z" fill="none" stroke="#2EE59D" stroke-width="2.5" stroke-linejoin="round"/><path d="M15 23 l6 6 l11 -12" fill="none" stroke="#2EE59D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><b>Гарантия запуска</b><span>Работающий бот за 3 недели, или возвращаю оплату полностью.</span></div>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide" data-title="Как начинаем">
+    <p class="eyebrow in">Как начинаем</p>
+    <h2 class="in">Три шага <span class="hl">до работающего бота</span></h2>
+    <div class="road in">
+      <div class="grid c3">
+        <div class="glass"><div class="node">1</div><h3>Разговор о ваших продуктах</h3><p>Что вы продаёте, кому, и как сейчас человек идёт от канала до оплаты.</p></div>
+        <div class="glass"><div class="node">2</div><h3>Схема вашей воронки</h3><p>Рисую цепочку под ваши курсы и НАСТРОЙКУ, вы согласуете.</p></div>
+        <div class="glass"><div class="node">3</div><h3>Сборка и запуск</h3><p>Бот, оплаты, проверка от начала до конца, ссылки в соцсети. Первый отчёт через неделю.</p></div>
+      </div>
+    </div>
+    <div class="finale in"><strong>Через три недели ваши продукты <span class="hl">продаются автоматически</span></strong><span>Система продаж в Telegram</span></div>
+  </section>
+
+</div></div>
+
+<div class="zone l" id="zl"><button aria-label="Назад" tabindex="-1">‹</button></div>
+<div class="zone r" id="zr"><button aria-label="Дальше" tabindex="-1">›</button></div>
+
+<div id="bar">
+  <button id="prev" aria-label="Назад">‹ Назад</button>
+  <div id="dots"></div>
+  <span id="count">1 / 12</span>
+  <button id="next" aria-label="Дальше">Дальше ›</button>
+  <button id="fs" aria-label="Во весь экран" title="Во весь экран (F)"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M1 6V1h5M12 1h5v5M17 12v5h-5M6 17H1v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+  <span id="hint">← → · пробел · F</span>
+</div>
+
+<script>
+(function () {
+  var stage = document.getElementById("stage");
+  var slides = [].slice.call(document.querySelectorAll(".slide"));
+  var dots = document.getElementById("dots");
+  var vid = document.getElementById("vid"), vplay = document.getElementById("vplay");
+  var cur = 0, N = slides.length;
+
+  slides.forEach(function (s, i) {
+    var b = document.createElement("button"); b.textContent = i + 1; b.title = s.dataset.title;
+    b.setAttribute("aria-label", "Слайд " + (i + 1) + ": " + s.dataset.title);
+    b.onclick = function () { go(i); }; dots.appendChild(b);
+  });
+
+  function fit() {
+    var k = Math.min(innerWidth / 1280, (innerHeight - 72) / 720);
+    stage.style.transform = "scale(" + k + ")";
+  }
+  addEventListener("resize", fit); fit();
+
+  function go(n) {
+    n = Math.max(0, Math.min(N - 1, n));
+    slides.forEach(function (s, i) { s.classList.toggle("on", i === n); s.classList.toggle("past", i < n); });
+    [].forEach.call(dots.children, function (d, i) { d.classList.toggle("on", i === n); });
+    document.getElementById("count").textContent = (n + 1) + " / " + N;
+    document.getElementById("prog").style.width = ((n + 1) / N * 100) + "%";
+    document.getElementById("prev").disabled = n === 0;
+    document.getElementById("next").disabled = n === N - 1;
+    document.getElementById("zl").classList.toggle("off", n === 0);
+    document.getElementById("zr").classList.toggle("off", n === N - 1);
+    // на слайде с видео боковые зоны не перекрывают полосу перемотки
+    document.body.classList.toggle("vid-on", slides[n].id === "s-video");
+    cur = n;
+    try { history.replaceState(null, "", "#" + (n + 1)); } catch (e) {}
+    if (slides[n].id !== "s-video" && !vid.paused) vid.pause();
+  }
+
+  vplay.onclick = function (e) { e.stopPropagation(); vplay.hidden = true; vid.play().catch(function () { vplay.hidden = false; }); };
+  vid.addEventListener("play", function () { vplay.hidden = true; });
+  vid.addEventListener("ended", function () { vplay.hidden = false; });
+
+  document.getElementById("zl").onclick = function () { go(cur - 1); };
+  document.getElementById("zr").onclick = function () { go(cur + 1); };
+  document.getElementById("prev").onclick = function () { go(cur - 1); };
+  document.getElementById("next").onclick = function () { go(cur + 1); };
+  document.getElementById("fs").onclick = toggleFs;
+  function toggleFs() {
+    try {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {});
+      else document.exitFullscreen();
+    } catch (e) {}
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.target === vid || e.altKey || e.ctrlKey || e.metaKey) return;
+    var k = e.key;
+    if (k === "ArrowRight" || k === "PageDown" || k === " " || k === "Enter") { e.preventDefault(); go(cur + 1); }
+    else if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); go(cur - 1); }
+    else if (k === "Home") go(0);
+    else if (k === "End") go(N - 1);
+    else if (k === "f" || k === "F" || k === "а" || k === "А") toggleFs();
+    else if (/^[1-9]$/.test(k)) go(+k - 1);
+  });
+
+  var tx = null, ty = null;
+  document.addEventListener("touchstart", function (e) { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (tx === null) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty; tx = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  // провода схемы считаются от настоящих позиций карточек (offset* не зависят от масштаба сцены)
+  function wires() {
+    var svg = document.getElementById("wires"), flow = svg.parentNode;
+    var src = flow.querySelector(".src"), core = flow.querySelector(".core"), chain = flow.querySelector(".chain");
+    var W = flow.offsetWidth, H = flow.offsetHeight;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    [].slice.call(svg.querySelectorAll("path")).forEach(function (p) { p.remove(); });
+    var cx = core.offsetLeft, cy = core.offsetTop + core.offsetHeight / 2, x0 = src.offsetLeft + src.offsetWidth;
+    var d = [];
+    [].forEach.call(src.children, function (c) {
+      var y = src.offsetTop + c.offsetTop + c.offsetHeight / 2, mx = (x0 + cx) / 2;
+      d.push("M" + x0 + " " + y + " C" + mx + " " + y + " " + mx + " " + cy + " " + cx + " " + cy);
+    });
+    d.push("M" + (cx + core.offsetWidth) + " " + cy + " L" + chain.offsetLeft + " " + cy);
+    d.forEach(function (s) {
+      var p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("d", s); svg.appendChild(p);
+    });
+  }
+  wires();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(wires);
+
+  var start = parseInt((location.hash || "").slice(1), 10);
+  go(start >= 1 && start <= N ? start - 1 : 0);
+})();
+</script>
+
+
+</html>
